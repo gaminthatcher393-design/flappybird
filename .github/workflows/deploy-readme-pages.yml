@@ -1,0 +1,44 @@
+name: Deploy README as Pages
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+
+      - name: Build site (convert README.md to HTML)
+        run: |
+          set -e
+          mkdir -p site
+          # Create standalone HTML from README.md
+          pandoc README.md -s -o site/index.html
+          # Copy tracked files (images, assets) preserving paths so links keep working
+          git ls-files -z | xargs -0 -I{} cp --parents -v {} site/ || true
+
+      - name: Upload artifact for Pages
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./site
+
+  deploy:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    environment: github-pages
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
