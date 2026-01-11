@@ -29,6 +29,8 @@ jobs:
           pandoc README.md -s -o site/index.html
           # Copy tracked files (images, assets) preserving paths so links keep working
           git ls-files -z | xargs -0 -I{} cp --parents -v {} site/ || true
+          # Ensure Pages serves the uploaded artifact instead of Jekyll
+          touch site/.nojekyll
 
       - name: Upload artifact for Pages
         uses: actions/upload-pages-artifact@v1
